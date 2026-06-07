@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-hidden">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Personality Segmentation | AI Predictor</title>
+
+  <!-- Google Fonts & Tailwind CSS CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Prevent any scrollbar appearing on any element */
+    html,
+    body {
+      height: 100vh !important;
+      max-height: 100vh !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .glass-navbar {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .dark .glass-navbar {
+      background: rgba(7, 10, 18, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .step-content {
+      display: none;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .step-content.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+  </style>
+</head>
+
+<body
+  class="h-screen w-screen overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 dark:from-[#050811] dark:via-[#090D18] dark:to-[#070A12] text-slate-800 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between select-none">
+
+  <!-- Header / Navigation Bar (Slim 48px) -->
+  <header class="h-12 flex-shrink-0 border-b border-slate-200/70 dark:border-indigo-900/30 glass-navbar shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div
+          class="h-7 w-7 rounded-lg bg-gradient-to-tr from-indigo-600 via-violet-600 to-purple-600 flex items-center justify-center shadow-sm text-white font-bold text-xs">
+          CS
+        </div>
+        <div class="flex items-center">
+          <span class="font-bold text-slate-900 dark:text-white text-sm tracking-tight">Segmentation<span
+              class="text-indigo-600 dark:text-indigo-400">AI</span></span>
+          <span
+            class="hidden sm:inline-block ml-2 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100/70 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-800/60">ML
+            Engine v2.0</span>
+        </div>
+      </div>
+
+      <!-- Theme Switcher -->
+      <button id="themeToggle" type="button" aria-label="Toggle Dark Mode"
+        class="p-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+        <!-- Sun Icon -->
+        <svg id="sunIcon" class="w-3.5 h-3.5 hidden text-amber-400" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <!-- Moon Icon -->
+        <svg id="moonIcon" class="w-3.5 h-3.5 hidden text-indigo-400" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Fullscreen Viewport Area -->
+  <main class="flex-1 max-w-4xl mx-auto px-4 py-2 sm:py-3 w-full flex flex-col justify-center overflow-hidden">
+
+    <!-- Title Section (Compact Zero-Scroll Header) -->
+    <div class="text-center mb-2 flex-shrink-0">
+      <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Customer Personality Segmentation
+      </h1>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+        Provide customer metrics to predict personality cluster segment.
+      </p>
+    </div>
+
+    {% if context is defined and context != 'Rendering' %}
+    <!-- Compact Result Banner -->
+    <div id="resultCard"
+      class="mb-2 p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-md shadow-indigo-500/20 border border-indigo-400/30 flex-shrink-0">
+      <div class="flex flex-row items-center justify-between gap-3">
+        <div class="flex items-center space-x-2.5">
+          <div
+            class="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 text-white border border-white/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <span
+              class="px-2 py-0.5 rounded-full bg-white/20 text-[9px] font-bold tracking-wider uppercase backdrop-blur-md">Prediction
+              Complete</span>
+            <h2 class="text-xs sm:text-sm font-extrabold tracking-tight">
+              Predicted Segment: Cluster {{ context }}
+            </h2>
+          </div>
+        </div>
+        <a href="#segmentationForm" onclick="resetForm()"
+          class="px-3 py-1 rounded-lg bg-white text-indigo-900 font-semibold text-[11px] hover:bg-slate-100 transition-colors shadow-sm flex-shrink-0 text-center">
+          Reset
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Multi-step Form Card (Zero-Scroll Height Bounded) -->
+    <div id="segmentationFormCard"
+      class="bg-white/90 dark:bg-[#0B0F1C]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-indigo-950/60 rounded-2xl shadow-xl shadow-indigo-500/5 dark:shadow-indigo-950/40 flex-1 flex flex-col justify-between overflow-hidden max-h-[calc(100vh-140px)]">
+
+      <!-- Progress Header (Compact) -->
+      <div
+        class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 flex-shrink-0">
+
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-between max-w-sm mx-auto mb-1.5">
+
+          <!-- Step 1 Indicator -->
+          <div class="flex items-center space-x-1.5">
+            <div id="stepIndicator1"
+              class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm">
+              1
+            </div>
+            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200">Demographics</span>
+          </div>
+
+          <div class="flex-1 mx-2 h-0.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div id="lineProgress1"
+              class="h-full bg-gradient-to-r from-indigo-600 to-violet-600 transition-all duration-500 w-0"></div>
+          </div>
+
+          <!-- Step 2 Indicator -->
+          <div class="flex items-center space-x-1.5">
+            <div id="stepIndicator2"
+              class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
+              2
+            </div>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">Purchases</span>
+          </div>
+
+          <div class="flex-1 mx-2 h-0.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div id="lineProgress2"
+              class="h-full bg-gradient-to-r from-indigo-600 to-violet-600 transition-all duration-500 w-0"></div>
+          </div>
+
+          <!-- Step 3 Indicator -->
+          <div class="flex items-center space-x-1.5">
+            <div id="stepIndicator3"
+              class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
+              3
+            </div>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">Behavior</span>
+          </div>
+        </div>
+
+        <!-- Overall Progress Bar -->
+        <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+          <span id="stepTitle">Step 1 of 3: Demographics</span>
+
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden">
+          <div id="progressBar"
+            class="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 h-full transition-all duration-500 ease-out"
+            style="width: 33.33%;"></div>
+        </div>
+      </div>
+
+      <!-- Form Inputs Area (Zero-Scroll Responsive Grid) -->
+      <form id="segmentationForm" action="/" method="post"
+        class="px-4 py-3 sm:px-6 flex-1 flex flex-col justify-center overflow-hidden">
+
+        <!-- ==================== STEP 1: DEMOGRAPHICS ==================== -->
+        <div id="step1" class="step-content active space-y-2.5">
+          <div class="border-b border-slate-100 dark:border-slate-800/80 pb-1.5 mb-2">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Customer Demographics</h3>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Basic customer background metrics.</p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+
+            <!-- Age -->
+            <div class="space-y-0.5">
+              <label for="Age"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Age
+                <span class="text-rose-500">*</span></label>
+              <input type="number" id="Age" name="Age" min="18" max="100" placeholder="e.g., 42" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Education -->
+            <div class="space-y-0.5">
+              <label for="Education"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Education
+                <span class="text-rose-500">*</span></label>
+              <select id="Education" name="Education" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                <option value="" disabled selected>Education</option>
+                <option value="0">Basic</option>
+                <option value="1">2n Cycle (Diploma)</option>
+                <option value="2">Graduation (Bachelor)</option>
+                <option value="3">Master</option>
+                <option value="4">PhD</option>
+              </select>
+            </div>
+
+            <!-- Marital Status -->
+            <div class="space-y-0.5">
+              <label for="Marital_Status"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Marital
+                Status <span class="text-rose-500">*</span></label>
+              <select id="Marital_Status" name="Marital_Status" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                <option value="" disabled selected>Marital Status</option>
+                <option value="1">Married</option>
+                <option value="1">Together</option>
+                <option value="0">Single</option>
+                <option value="0">Divorced</option>
+                <option value="0">Widow</option>
+                <option value="0">Alone</option>
+                <option value="0">YOLO</option>
+                <option value="0">Absurd</option>
+              </select>
+            </div>
+
+            <!-- Parental Status -->
+            <div class="space-y-0.5">
+              <label for="Parental_Status"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Has Kids
+                <span class="text-rose-500">*</span></label>
+              <select id="Parental_Status" name="Parental_Status" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                <option value="" disabled selected>Has Kids?</option>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <!-- Children -->
+            <div class="space-y-0.5">
+              <label for="Children"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Children
+                <span class="text-rose-500">*</span></label>
+              <input type="number" id="Children" name="Children" min="0" max="10" placeholder="e.g., 1" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Income -->
+            <div class="space-y-0.5">
+              <label for="Income"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Annual
+                Income ($) <span class="text-rose-500">*</span></label>
+              <input type="number" id="Income" name="Income" min="0" step="100" placeholder="e.g., 58138" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Days as Customer -->
+            <div class="space-y-0.5 sm:col-span-3">
+              <label for="Days_as_Customer"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Days as
+                Customer <span class="text-rose-500">*</span></label>
+              <input type="number" id="Days_as_Customer" name="Days_as_Customer" min="0" placeholder="e.g., 997"
+                required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== STEP 2: PURCHASE BEHAVIOUR ==================== -->
+        <div id="step2" class="step-content space-y-2.5">
+          <div class="border-b border-slate-100 dark:border-slate-800/80 pb-1.5 mb-2">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Purchase Behaviour</h3>
+            <p class="text-[20px] text-slate-500 dark:text-slate-400">Product spending breakdowns over the past 2 years.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+
+            <!-- Total Spending -->
+            <div class="space-y-0.5">
+              <label for="Total_Spending"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Total
+                Spend ($) <span class="text-rose-500">*</span></label>
+              <input type="number" id="Total_Spending" name="Total_Spending" min="0" placeholder="e.g., 1617" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Recency -->
+            <div class="space-y-0.5">
+              <label for="Recency"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Days as
+                Customer<span class="text-rose-500">*</span></label>
+              <input type="number" id="Recency" name="Recency" min="0" max="365" placeholder="e.g., 58" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Wines -->
+            <div class="space-y-0.5">
+              <label for="Wines"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Wines
+                ($) <span class="text-rose-500">*</span></label>
+              <input type="number" id="Wines" name="Wines" min="0" placeholder="e.g., 635" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Fruits -->
+            <div class="space-y-0.5">
+              <label for="Fruits"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Fruits
+                ($) <span class="text-rose-500">*</span></label>
+              <input type="number" id="Fruits" name="Fruits" min="0" placeholder="e.g., 88" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Meat -->
+            <div class="space-y-0.5">
+              <label for="Meat"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Meat ($)
+                <span class="text-rose-500">*</span></label>
+              <input type="number" id="Meat" name="Meat" min="0" placeholder="e.g., 546" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Fish -->
+            <div class="space-y-0.5">
+              <label for="Fish"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Fish ($)
+                <span class="text-rose-500">*</span></label>
+              <input type="number" step="0.01" id="Fish" name="Fish" min="0" placeholder="e.g., 172" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Sweets -->
+            <div class="space-y-0.5">
+              <label for="Sweets"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Sweets
+                ($) <span class="text-rose-500">*</span></label>
+              <input type="number" id="Sweets" name="Sweets" min="0" placeholder="e.g., 88" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Gold -->
+            <div class="space-y-0.5">
+              <label for="Gold"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Gold ($)
+                <span class="text-rose-500">*</span></label>
+              <input type="number" step="0.01" id="Gold" name="Gold" min="0" placeholder="e.g., 88" required
+                class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== STEP 3: SHOPPING BEHAVIOUR ==================== -->
+        <div id="step3" class="step-content space-y-2.5">
+          <div class="border-b border-slate-100 dark:border-slate-800/80 pb-1.5 mb-2">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Shopping & Channel Engagement</h3>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Channel purchase frequency and promo engagement.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+
+            <!-- Web Purchases -->
+            <div class="space-y-0.5">
+              <label for="Web"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Web
+                Purchases <span class="text-rose-500">*</span></label>
+              <input type="number" id="Web" name="Web" min="0" placeholder="e.g., 8" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Catalog Purchases -->
+            <div class="space-y-0.5">
+              <label for="Catalog"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Catalog
+                Purchases <span class="text-rose-500">*</span></label>
+              <input type="number" id="Catalog" name="Catalog" min="0" placeholder="e.g., 3" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Store Purchases -->
+            <div class="space-y-0.5">
+              <label for="Store"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Store
+                Purchases <span class="text-rose-500">*</span></label>
+              <input type="number" id="Store" name="Store" min="0" placeholder="e.g., 4" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Discount Purchases -->
+            <div class="space-y-0.5">
+              <label for="Discount_Purchases"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Discount
+                Purchases <span class="text-rose-500">*</span></label>
+              <input type="number" id="Discount_Purchases" name="Discount_Purchases" min="0" placeholder="e.g., 3"
+                required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Total Promo -->
+            <div class="space-y-0.5">
+              <label for="Total_Promo"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Promotions
+                Accepted <span class="text-rose-500">*</span></label>
+              <input type="number" id="Total_Promo" name="Total_Promo" min="0" max="5" placeholder="e.g., 0" required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+            <!-- Monthly Website Visits -->
+            <div class="space-y-0.5">
+              <label for="NumWebVisitsMonth"
+                class="block text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Monthly
+                Web Visits <span class="text-rose-500">*</span></label>
+              <input type="number" id="NumWebVisitsMonth" name="NumWebVisitsMonth" min="0" placeholder="e.g., 7"
+                required
+                class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div
+          class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between flex-shrink-0">
+
+          <!-- Previous Button -->
+          <button type="button" id="prevBtn" onclick="changeStep(-1)"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 hidden shadow-sm">
+            ← Previous
+          </button>
+
+          <div></div>
+
+          <!-- Next Button -->
+          <button type="button" id="nextBtn" onclick="changeStep(1)"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white font-semibold text-xs hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md shadow-indigo-500/25 hover:shadow-indigo-500/40 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            Next Step →
+          </button>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white font-semibold text-xs hover:from-emerald-600 hover:to-cyan-700 transition-all shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 hidden flex items-center space-x-1.5">
+            <span id="submitBtnText">Predict Customer Segment</span>
+            <svg id="submitSpinner" class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white hidden" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer (Slim 28px) -->
+  <footer
+    class="h-7 flex-shrink-0 border-t border-slate-200/70 dark:border-indigo-900/30 flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-400">
+    <div class="max-w-5xl mx-auto px-4 text-center">
+      Customer Personality Segmentation System &bull; Powered by FastAPI & Machine Learning
+    </div>
+  </footer>
+
+  <!-- Interactivity & Multi-Step Navigation Script -->
+  <script>
+    // Theme Switcher Logic
+    const themeToggle = document.getElementById('themeToggle');
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        moonIcon.classList.remove('hidden');
+        sunIcon.classList.add('hidden');
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        moonIcon.classList.remove('hidden');
+        sunIcon.classList.add('hidden');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      }
+    });
+
+    initTheme();
+
+    // Multi-Step Form Navigation Logic
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function updateStepUI() {
+      // Toggle Step Contents
+      for (let i = 1; i <= totalSteps; i++) {
+        const stepEl = document.getElementById(`step${i}`);
+        if (i === currentStep) {
+          stepEl.classList.add('active');
+        } else {
+          stepEl.classList.remove('active');
+        }
+      }
+
+      // Update Step Indicators
+      for (let i = 1; i <= totalSteps; i++) {
+        if (i === currentStep) {
+          document.getElementById(`stepIndicator${i}`).className = 'w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm ring-2 ring-indigo-200 dark:ring-indigo-900/60';
+        } else if (i < currentStep) {
+          document.getElementById(`stepIndicator${i}`).className = 'w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-emerald-500 text-white shadow-sm';
+          document.getElementById(`stepIndicator${i}`).innerHTML = '✓';
+        } else {
+          document.getElementById(`stepIndicator${i}`).className = 'w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] transition-all duration-300 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500';
+          document.getElementById(`stepIndicator${i}`).innerHTML = i.toString();
+        }
+      }
+
+      // Update Progress Lines
+      document.getElementById('lineProgress1').style.width = currentStep >= 2 ? '100%' : '0%';
+      document.getElementById('lineProgress2').style.width = currentStep >= 3 ? '100%' : '0%';
+
+      // Update Progress Bar & Titles
+      const percentage = Math.round((currentStep / totalSteps) * 100);
+      document.getElementById('progressBar').style.width = `${percentage}%`;
+      document.getElementById('percentText').innerText = `${percentage}% Completed`;
+
+      const stepTitles = [
+        'Step 1 of 3: Demographics',
+        'Step 2 of 3: Purchase Behaviour',
+        'Step 3 of 3: Shopping Behaviour'
+      ];
+      document.getElementById('stepTitle').innerText = stepTitles[currentStep - 1];
+
+      // Button Visibility
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (currentStep === 1) {
+        prevBtn.classList.add('hidden');
+      } else {
+        prevBtn.classList.remove('hidden');
+      }
+
+      if (currentStep === totalSteps) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+      }
+    }
+
+    function validateCurrentStep() {
+      const currentStepEl = document.getElementById(`step${currentStep}`);
+      const inputs = currentStepEl.querySelectorAll('input, select');
+      let isValid = true;
+
+      inputs.forEach(input => {
+        if (!input.checkValidity()) {
+          isValid = false;
+          input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+          input.reportValidity();
+        } else {
+          input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        }
+      });
+
+      return isValid;
+    }
+
+    function changeStep(direction) {
+      if (direction === 1) {
+        if (!validateCurrentStep()) return;
+      }
+
+      const nextStep = currentStep + direction;
+      if (nextStep >= 1 && nextStep <= totalSteps) {
+        currentStep = nextStep;
+        updateStepUI();
+      }
+    }
+
+    // Handle Form Submit Loading Animation
+    const form = document.getElementById('segmentationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitBtnText = document.getElementById('submitBtnText');
+    const submitSpinner = document.getElementById('submitSpinner');
+
+    form.addEventListener('submit', function (e) {
+      if (!validateCurrentStep()) {
+        e.preventDefault();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtnText.innerText = "Predicting...";
+      submitSpinner.classList.remove('hidden');
+    });
+
+    function resetForm() {
+      currentStep = 1;
+      updateStepUI();
+    }
+  </script>
+</body>
+
+</html>
