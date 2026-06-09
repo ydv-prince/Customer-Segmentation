@@ -1,0 +1,15 @@
+assignment/
+docs/
+flowchart/
+infrastructure/
+notebooks/
+scripts/
+venv/
+README.md
+
+__pycache__/
+artifact/
+venv/
+customer_segmentation/
+.ipynb_checkpoints/
+.git/
