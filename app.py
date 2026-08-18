@@ -19,6 +19,7 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 origins = ["*"]
+os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
